@@ -1,0 +1,33 @@
+{
+  "name": "fingertree-js",
+  "version": "1.0.0",
+  "description": "Javascript implementation of fingertree",
+  "main": "index.js",
+  "scripts": {
+    "build": "webpack --mode production",
+    "debug": "webpack --mode development --watch",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/poppopret/fingertree-js.git"
+  },
+  "keywords": [
+    "fingertree"
+  ],
+  "author": "poppopret",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/poppopret/fingertree-js/issues"
+  },
+  "homepage": "https://github.com/poppopret/fingertree-js#readme",
+  "devDependencies": {
+    "@babel/core": "^7.5.5",
+    "@babel/plugin-proposal-class-properties": "^7.5.5",
+    "@babel/preset-env": "^7.5.5",
+    "babel-loader": "^8.0.6",
+    "clean-webpack-plugin": "^3.0.0",
+    "webpack": "^4.39.1",
+    "webpack-cli": "^3.3.6"
+  }
+}
