@@ -1,6 +1,6 @@
 import { Measured } from './abstract';
 import Node from './Node';
-import { connect } from './utils';
+import { connect, assert } from './utils';
 
 export default Monoid => {
     const { Node3 } = connect(Node)(Monoid);
@@ -43,9 +43,9 @@ export default Monoid => {
 
         append(a) { return new Single(a); }
 
-        viewl() { return []; }
+        viewl(peek = false) { return peek ? undefined : []; }
 
-        viewr() { return []; }
+        viewr(peek = false) { return peek ? undefined : []; }
     }
 
     class Single extends FingerTree {
@@ -64,12 +64,12 @@ export default Monoid => {
             return new Deep([this.a], new Empty, [b]);
         }
 
-        viewl() {
-            return [this.a, new Empty];
+        viewl(peek = false) {
+            return peek ? this.a : [this.a, new Empty];
         }
 
-        viewr() {
-            return [new Empty, this.a];
+        viewr(peek = false) {
+            return peek ? this.a : [new Empty, this.a];
         }
     }
 
@@ -77,18 +77,6 @@ export default Monoid => {
         prefix = null; // 1-4 list of type `a`
         deeper = null; // reference to another fingertree of type `Node a`
         suffix = null; // 1-4 list of type `a`
-
-        static checkAffix(affix = []) {
-            if (!Array.isArray(affix) || affix.length < 1 || affix.length > 4) {
-                throw new Error('Deep affix error');
-            }
-        }
-
-        static checkDeeper(deeper) {
-            if (!deeper instanceof FingerTree) {
-                throw new Error('Deep deeper error');
-            }
-        }
 
         static measureAffix(affix = []) {
             return affix.map(a => a.measure()).reduce(Monoid.mappend, Monoid.mempty);
@@ -111,8 +99,14 @@ export default Monoid => {
             Deep.measureAffix(suffix)
         ].reduce(Monoid.mappend, Monoid.mempty)) {
             super(v);
-            [prefix, suffix].forEach(affix => Deep.checkAffix(affix));
-            Deep.checkDeeper(deeper);
+            // validate params
+            [prefix, suffix].forEach(affix => assert.all([
+                Array.isArray(affix),
+                affix.length >= 1,
+                affix.length <= 4
+            ], 'Deep affix error'));
+            assert.ok(deeper instanceof FingerTree, 'Deep deeper error');
+
             this.prefix = prefix;
             this.suffix = suffix;
             this.deeper = deeper;
@@ -144,9 +138,11 @@ export default Monoid => {
             return this;
         }
 
-        viewl() {
+        viewl(peek = false) {
             let [a, ...rest] = this.prefix;
-            if (this.prefix.length === 1) {
+            if (peek) {
+                return a;
+            } else if (this.prefix.length === 1) {
                 let [left, tree] = this.deeper.viewl();
                 return [a, left ? new Deep(
                     left.nodes,
@@ -159,10 +155,12 @@ export default Monoid => {
             }
         }
 
-        viewr() {
+        viewr(peek = false) {
             let [a] = this.suffix.slice(-1);
             let rest = this.suffix.slice(0, -1);
-            if (this.suffix.length === 1) {
+            if (peek) {
+                return a;
+            } else if (this.suffix.length === 1) {
                 let [tree, right] = this.deeper.viewr();
                 return [right ? new Deep(
                     this.prefix,
