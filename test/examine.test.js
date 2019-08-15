@@ -1,47 +1,6 @@
-import { Monoid, Measured, init } from '../src/index';
+import { Empty, Single, Deep, SizeMeasured, getDigitList, getDigitTree, getTreeValues } from './utils';
 
-class SizeMonoid extends Monoid {
-    static get mempty() { return 0; }
-    static mappend(a, b) {
-        return a + b;
-    }
-}
-
-class SizeMeasured extends Measured {
-    constructor(x) {
-        super();
-        this.x = x;
-    }
-
-    measure() {
-        return 1;
-    }
-}
-
-const { Empty, Single, Deep } = init(SizeMonoid);
-const getDigitList = len => [...Array(len).keys()];
-const getDigitTree = len => {
-    return Empty.fromList(getDigitList(len).map(x => new SizeMeasured(x)));
-};
-
-describe('FingerTree initializing', () => {
-    test('empty tree works with constructor', () => {
-        expect(new Empty).toHaveProperty('v', 0);
-    });
-    test('single tree works with constructor', () => {
-        expect(new Single(new SizeMeasured(5))).toHaveProperty('v', 1);
-    });
-    test('deep tree works with constructor', () => {
-        expect(new Deep([new SizeMeasured(1)], new Empty, [new SizeMeasured(2)])).toHaveProperty('v', 2);
-    });
-    test('tree works with fromList', () => {
-        expect(getDigitTree(0)).toHaveProperty('v', 0);
-        expect(getDigitTree(1)).toHaveProperty('v', 1);
-        expect(getDigitTree(100)).toHaveProperty('v', 100);
-    });
-});
-
-describe('FingerTree basic operations', () => {
+describe('Examining the ends', () => {
     describe('viewl works', () => {
         test('on Empty', () => {
             expect((new Empty).viewl()).toHaveLength(0);
@@ -67,7 +26,7 @@ describe('FingerTree basic operations', () => {
             let list = [];
             while (!(tree instanceof Empty)) {
                 let [left, newTree] = tree.viewl();
-                list.push(left.x);
+                list.push(left.get());
                 tree = newTree;
             }
             expect(list).toEqual(getDigitList(len));
@@ -98,7 +57,7 @@ describe('FingerTree basic operations', () => {
             let list = [];
             while (!(tree instanceof Empty)) {
                 let [newTree, right] = tree.viewr();
-                list.push(right.x);
+                list.push(right.get());
                 tree = newTree;
             }
             expect(list).toEqual(getDigitList(len).reverse());
@@ -123,6 +82,19 @@ describe('FingerTree basic operations', () => {
             expect(left).toBeInstanceOf(SizeMeasured);
             expect(right).toBeInstanceOf(SizeMeasured);
             expect(left).not.toEqual(right);
+        });
+    });
+    describe('toList works', () => {
+        test('on Empty', () => {
+            expect(getTreeValues(new Empty)).toHaveLength(0);
+        });
+        test('on Single', () => {
+            expect(getTreeValues(new Single(new SizeMeasured(1)))).toEqual([1]);
+        });
+        test('on Deep', () => {
+            expect(getTreeValues(getDigitTree(2))).toEqual(getDigitList(2));
+            expect(getTreeValues(getDigitTree(20))).toEqual(getDigitList(20));
+            expect(getTreeValues(getDigitTree(36))).toEqual(getDigitList(36));
         });
     });
 });

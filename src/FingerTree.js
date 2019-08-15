@@ -1,9 +1,10 @@
 import { Measured } from './abstract';
-import Node from './Node';
-import { connect, assert } from './utils';
+import connect from './Node';
+import { assert, patch } from './utils';
 
 export default Monoid => {
-    const { Node3 } = connect(Node)(Monoid);
+    const { Node3, Node } = connect(Monoid);
+    const assertMeasured = a => assert.ok(a instanceof Measured, 'not an instance of Measured');
 
     class FingerTree extends Measured {
         v = Monoid.mempty; // monoidal annotation, named by convention `FingerTree v a`
@@ -11,6 +12,8 @@ export default Monoid => {
         constructor(v = Monoid.mempty) {
             super();
             this.v = v;
+            patch(this, 'prepend', assertMeasured);
+            patch(this, 'append', assertMeasured);
         }
 
         measure() {
@@ -33,8 +36,30 @@ export default Monoid => {
             throw new Error('Abstract method prepend not implemented!');
         }
 
+        static concat(left, right) {
+            const concat = (left, middle, right) => {
+                if (!(left instanceof Deep)) {
+                    return [...left.toList(), ...middle].reduceRight((tree, item) => tree.prepend(item), right);
+                } else if (!(right instanceof Deep)) {
+                    return [...middle, ...right.toList()].reduce((tree, item) => tree.append(item), left);
+                } else {
+                    return new Deep(
+                        left.prefix,
+                        concat(left.deeper, Node.nodes([...left.suffix, ...middle, ...right.prefix]), right.deeper),
+                        right.suffix
+                    );
+                }
+            };
+            return concat(left, [], right);
+        }
+
         static fromList(list = []) {
+            list.forEach(assertMeasured);
             return list.reduceRight((tree, item) => tree.prepend(item), new Empty);
+        }
+
+        toList() {
+            throw new Error('Abstract method toList not implemented!');
         }
     }
 
@@ -46,13 +71,16 @@ export default Monoid => {
         viewl(peek = false) { return peek ? undefined : []; }
 
         viewr(peek = false) { return peek ? undefined : []; }
+
+        toList() { return []; }
     }
 
     class Single extends FingerTree {
         a = null; // named by convention `Single a`
 
-        constructor(a, v = a.measure()) {
-            super(v);
+        constructor(a) {
+            assertMeasured(a);
+            super(a.measure());
             this.a = a;
         }
 
@@ -71,6 +99,8 @@ export default Monoid => {
         viewr(peek = false) {
             return peek ? this.a : [new Empty, this.a];
         }
+
+        toList() { return [this.a]; }
     }
 
     class Deep extends FingerTree {
@@ -99,43 +129,31 @@ export default Monoid => {
             Deep.measureAffix(suffix)
         ].reduce(Monoid.mappend, Monoid.mempty)) {
             super(v);
-            // validate params
-            [prefix, suffix].forEach(affix => assert.all([
-                Array.isArray(affix),
-                affix.length >= 1,
-                affix.length <= 4
-            ], 'Deep affix error'));
-            assert.ok(deeper instanceof FingerTree, 'Deep deeper error');
-
             this.prefix = prefix;
             this.suffix = suffix;
             this.deeper = deeper;
         }
 
         prepend(a) {
-            // reuse the current tree
-            this.v = Monoid.mappend(a.measure(), this.measure());
-            if (this.prefix.length === 4) {
-                let [b, c, d, e] = this.prefix;
-                this.prefix = [a, b];
-                this.deeper = this.deeper.prepend(new Node3([c, d, e]));
-            } else {
-                this.prefix = [a, ...this.prefix];
-            }
-            return this;
+            let full = this.prefix.length === 4;
+            let [b, c, d, e] = this.prefix;
+            return new Deep(
+                full ? [a, b] : [a, ...this.prefix],
+                full ? this.deeper.prepend(new Node3([c, d, e])) : this.deeper,
+                [...this.suffix],
+                Monoid.mappend(a.measure(), this.measure())
+            );
         }
 
         append(e) {
-            // reuse the current tree
-            this.v = Monoid.mappend(this.measure(), e.measure());
-            if (this.suffix.length === 4) {
-                let [a, b, c, d] = this.suffix;
-                this.deeper = this.deeper.append(new Node3([a, b, c]));
-                this.suffix = [d, e];
-            } else {
-                this.suffix = [...this.suffix, e];
-            }
-            return this;
+            let full = this.suffix.length === 4;
+            let [a, b, c, d] = this.suffix;
+            return new Deep(
+                [...this.prefix],
+                full ? this.deeper.append(new Node3([a, b, c])) : this.deeper,
+                full ? [d, e] : [...this.suffix, e],
+                Monoid.mappend(this.measure(), e.measure())
+            );
         }
 
         viewl(peek = false) {
@@ -172,7 +190,18 @@ export default Monoid => {
                 return [new Deep(this.prefix, this.deeper, rest), a];
             }
         }
+
+        toList() {
+            let affixToList = affix => {
+                return affix.reduce((list, node) => {
+                    return list.concat(node instanceof Node ? node.toList() : node);
+                }, []);
+            };
+            return [...affixToList(this.prefix), ...this.deeper.toList(), ...affixToList(this.suffix)];
+        }
     }
 
-    return { Empty, Single, Deep };
+    return process.env.NODE_ENV === 'production'
+        ? { Empty, Single, FingerTree } // avoid malformed Deep tree
+        : { Empty, Single, Deep, FingerTree };
 };

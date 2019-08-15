@@ -1,5 +1,2 @@
-import FingerTree from './FingerTree';
-import { connect } from './utils';
-
+export { default } from './FingerTree';
 export { Monoid, Measured } from './abstract';
-export const init = connect(FingerTree);

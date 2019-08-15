@@ -14,6 +14,24 @@ export default Monoid => {
         measure() {
             return this.v;
         }
+
+        toList() {
+            return this.nodes.reduce((list, node) => {
+                return list.concat(node instanceof Node ? node.toList() : node);
+            }, []);
+        }
+
+        static nodes(xs) {
+            let len = xs.length;
+            switch (len) {
+                case 0:
+                case 1: throw new Error('not enough nodes');
+                case 2: return [new Node2([...xs])];
+                case 3: return [new Node3([...xs])];
+                case 4: return [new Node2(xs.slice(0, 2)), new Node2(xs.slice(2))];
+                default: return [new Node3(xs.slice(0, 3)), ...Node.nodes(xs.slice(3))];
+            }
+        }
     }
 
     class Node2 extends Node {
@@ -34,5 +52,5 @@ export default Monoid => {
         }
     }
 
-    return { Node2, Node3 };
+    return { Node2, Node3, Node };
 };
