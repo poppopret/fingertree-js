@@ -17,7 +17,7 @@ import init, {Monoid, Measured} from 'fingertree-js';
 This is a abstract class, you can inherit it to creat your own monoid
 ```javascript
 import { Monoid } from 'fingertree-js';
-export class SizeMonoid extends Monoid {
+class SizeMonoid extends Monoid {
     static get mempty() { return 0; } // must be implemented
     static mappend(a, b) { return a + b; } // must be implemented
 }

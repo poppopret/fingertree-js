@@ -1,6 +1,6 @@
 {
   "name": "fingertree-js",
-  "version": "0.0.1",
+  "version": "1.0.0",
   "description": "Javascript implementation of fingertree",
   "main": "build/fingertree.js",
   "module": "src/index.js",
