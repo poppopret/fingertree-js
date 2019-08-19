@@ -1,9 +1,8 @@
 {
   "name": "fingertree-js",
   "version": "1.0.0",
-  "description": "Javascript implementation of fingertree",
+  "description": "Javascript implementation of Finger Tree",
   "main": "build/fingertree.js",
-  "module": "src/index.js",
   "scripts": {
     "build": "webpack --mode production",
     "debug": "webpack --mode development --watch",
