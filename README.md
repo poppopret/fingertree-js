@@ -103,7 +103,9 @@ let v = tree.measure(); // got 100, for example
 
 ### Search
 #### tree.search(predicate)
-Search a tree for a point where a predicate changes from `False` to `True`. `predicate` is a function returns `Boolean` from two arguments `(measureLeft, measureRight)`. The tree takes the predicate function and returns an array like `[leftTree, target, rightTree]` which makes `predicate(leftTree.measure(), rightTree.prepend(target).measure())` `False` and `predicate(leftTree.append(target).measure(), rightTree.measure())` `True`. If no such point is found, `[]` is returned instead. The `predicate` must be monotonic.
+Search a tree for a point where a `predicate` changes from `False` to `True`. The `predicate` is a function returns `Boolean` from two arguments `(measureLeft, measureRight)`. 
+
+The tree takes the predicate function and returns an array like `[leftTree, target, rightTree]` which makes `predicate(leftTree.measure(), rightTree.prepend(target).measure())` return `False` and `predicate(leftTree.append(target).measure(), rightTree.measure())` return `True`. If no such point is found, `[]` is returned instead. The `predicate` must be monotonic.
 ```javascript
 const at = index => (vl, vr) => index < 0 ? vr + 1 <= -index : vl - 1 >= index; // you can ignore vr completely and use vl only if you like
 tree.search(at(1)); // find sequence for the 1st elemnt, zero indexed. Got [single, target, empty], for example.
