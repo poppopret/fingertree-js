@@ -25,4 +25,8 @@ export class Monoid {
     static mappend() {
         throw new Error('Abstract method mappend not implemented!');
     }
+
+    static mconcat(list = []) {
+        return list.reduce(this.mappend, this.mempty);
+    }
 }

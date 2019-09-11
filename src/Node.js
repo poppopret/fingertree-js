@@ -5,7 +5,7 @@ export default Monoid => {
         v = Monoid.mempty; // monoidal annotation
         nodes = []; // 2-3 children
 
-        constructor(nodes, v = nodes.map(a => a.measure()).reduce(Monoid.mappend, Monoid.mempty)) {
+        constructor(nodes, v = Monoid.mconcat(nodes.map(a => a.measure()))) {
             super();
             this.nodes = nodes;
             this.v = v;

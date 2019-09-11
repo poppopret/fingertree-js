@@ -20,6 +20,7 @@ import { Monoid } from 'fingertree-js';
 class SizeMonoid extends Monoid {
     static get mempty() { return 0; } // must be implemented
     static mappend(a, b) { return a + b; } // must be implemented
+    static mconcat(list) { return list.reduce(this.mappend, this.mempty); } // no need to be implemented, but can also be overrode
 }
 ```
 #### Measured

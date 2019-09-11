@@ -126,7 +126,7 @@ export default Monoid => {
             if (affix.length > 4 || !affix.length) {
                 throw new Error('Deep affix error');
             }
-            return affix.map(a => a.measure()).reduce(Monoid.mappend, Monoid.mempty);
+            return Monoid.mconcat(affix.map(a => a.measure()));
         }
         
         static fromAffix(affix = []) {
@@ -167,7 +167,7 @@ export default Monoid => {
             }
             let [x, ...xs] = list;
             let vx = x.measure();
-            let vxs = xs.map(x => x.measure()).reduce(Monoid.mappend, Monoid.mempty);
+            let vxs = Monoid.mconcat(xs.map(x => x.measure()));
             if (predicate(Monoid.mappend(vl, vx), Monoid.mappend(vxs, vr))) {
                 return [[], x, xs];
             } else {
@@ -212,11 +212,11 @@ export default Monoid => {
             }
         }
 
-        constructor(prefix = [], deeper = null, suffix = [], v = [
+        constructor(prefix = [], deeper = null, suffix = [], v = Monoid.mconcat([
             Deep.measureAffix(prefix),
             deeper.measure(),
             Deep.measureAffix(suffix)
-        ].reduce(Monoid.mappend, Monoid.mempty)) {
+        ])) {
             super(v);
             this.prefix = prefix;
             this.suffix = suffix;
