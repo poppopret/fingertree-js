@@ -10,6 +10,10 @@ In your project:
 ```javascript
 import init, {Monoid, Measured} from 'fingertree-js';
 ```
+
+## Examples
+See repository [fingertree-based-js](https://github.com/poppopret/fingertree-based-js), which implements [priorityQueue](https://github.com/poppopret/fingertree-based-js/blob/master/src/priorityQueue.js) and [sequence](https://github.com/poppopret/fingertree-based-js/blob/master/src/sequence.js).
+
 ## API
 
 ### Init
